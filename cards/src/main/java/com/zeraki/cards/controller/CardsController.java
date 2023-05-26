@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.zeraki.cards.config.CardsConfig;
+import com.zeraki.cards.dto.CardsConfigDto;
 import com.zeraki.cards.model.Cards;
 import com.zeraki.cards.repo.CardRepo;
 
@@ -16,10 +18,22 @@ import com.zeraki.cards.repo.CardRepo;
 public class CardsController {
 	@Autowired
 	private CardRepo cardRepo;
+	@Autowired
+	private CardsConfig cardsConfig;
 
 	@GetMapping
 	public List<Cards> getCustomerCards(@RequestParam Long customerId) {
 		return cardRepo.findByCustomerId(customerId);
+	}
+
+	@GetMapping("/config")
+	public CardsConfigDto getAccountsConfig() {
+		CardsConfigDto dto = new CardsConfigDto();
+		dto.setActiveBranches(cardsConfig.getActiveBranches());
+		dto.setBuildVersion(cardsConfig.getBuildVersion());
+		dto.setMailDetails(cardsConfig.getMailDetails());
+		dto.setMsg(cardsConfig.getMsg());
+		return dto;
 	}
 
 }
