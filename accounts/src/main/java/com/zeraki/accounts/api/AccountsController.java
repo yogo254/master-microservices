@@ -48,9 +48,8 @@ public class AccountsController {
 		return dto;
 	}
 
-
 	@GetMapping("/customerDetails")
-	@CircuitBreaker(name="customerDetails")
+	@CircuitBreaker(name = "customerDetails", fallbackMethod = "getCustomerDetailsFallback")
 	public CustomerDetails getCustomerDetails(@RequestParam Long customerId) {
 		Accounts accounts = accountsRepo.findOneByCustomerId(customerId).orElse(null);
 		List<Loans> loans = loansFeignClient.getLoansDetails(customerId);
@@ -60,7 +59,27 @@ public class AccountsController {
 		customerDetails.setAccounts(accounts);
 		customerDetails.setLoans(loans);
 		customerDetails.setCards(cards);
-		
+
+		return customerDetails;
+
+	}
+
+	public CustomerDetails getCustomerDetailsFallback(Long customerId, Throwable t) {
+		String message = t.getMessage();
+		CustomerDetails customerDetails = new CustomerDetails();
+		Accounts accounts = accountsRepo.findOneByCustomerId(customerId).orElse(null);
+		if (!message.contains("loans/")) {
+			List<Loans> loans = loansFeignClient.getLoansDetails(customerId);
+			customerDetails.setLoans(loans);
+
+		}
+		if (!message.contains("cards/")) {
+			List<Cards> cards = cardsFeignClient.getCardDetails(customerId);
+			customerDetails.setCards(cards);
+		}
+
+		customerDetails.setAccounts(accounts);
+
 		return customerDetails;
 
 	}
